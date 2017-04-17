@@ -8,38 +8,38 @@ int poolsize;
 
 enum Nadeko_C_Virtual_Machine_Commands
 {
-	// no operator command
-	LL, LI, LC, SL, SI, SC, PUSH,
-	ADD, SUB, MUL, DIV, MOD, AND, OR, NOT, XOR, SHL, SHR, INC, DEC,
+    // no operator command
+    LL, LI, LC, SL, SI, SC, PUSH,
+    ADD, SUB, MUL, DIV, MOD, AND, OR, NOT, XOR, SHL, SHR, INC, DEC,
     LEV, // CONTROL
 
-	// one or two(under x64 architecture) operator command
-	IMM, CALL, ENT, LEA, ADJ, JMP, JZ, JNZ,
+    // one or two(under x64 architecture) operator command
+    IMM, CALL, ENT, LEA, ADJ, JMP, JZ, JNZ,
 
-	// syscall command
-	PRTF, EXIT
+    // syscall command
+    PRTF, EXIT
 };
 
 void program(char *src, long *text, char *data)
 {
-	int token;
-	while (token = *src++)
-	{
-		putchar(token);
-	}
+    int token;
+    while (token = *src++)
+    {
+        putchar(token);
+    }
 }
 
 int eval(long *pc, long *stack, char *data)
 {
-	long op;
+    long op;
     long eax;
     long *ebp, *esp;
 
     ebp = esp = stack + poolsize / sizeof(long) - 1;
 
-	while (1)
-	{
-		op = *pc++;
+    while (1)
+    {
+        op = *pc++;
 
         // Load or store
         if (op == IMM) { eax = *pc++; }
@@ -141,43 +141,43 @@ int eval(long *pc, long *stack, char *data)
 #endif
         else if (op == EXIT) { printf("exit(%d);\n", (int)*pc); return (int)*pc; }
         else { printf("unknown command %ld", op); return -1; }
-	}
-	return 0;
+    }
+    return 0;
 }
 
 int main(int argc, char** argv)
 {
-	int fd, i;					// file
+    int fd, i;                  // file
 
-	char *src, *src_head;		// source code
+    char *src, *src_head;       // source code
 
-	long *text, *text_head;	    // text segment
+    long *text, *text_head;     // text segment
 
-	long *stack;				// stack segment
+    long *stack;                // stack segment
 
-	char *data, *data_head;		// data segment
+    char *data, *data_head;     // data segment
 
-	if (argc < 2)
-	{
-		printf("Usage: <ExecFilename> <SourceFilename>\n");
-		return -1;
-	}
+    if (argc < 2)
+    {
+        printf("Usage: <ExecFilename> <SourceFilename>\n");
+        return -1;
+    }
 
-	--argc;
-	++argv;
+    --argc;
+    ++argv;
 
     poolsize = 1024 * 256;
 
-	if (!(fd = open(*argv, 0x0000)))
-	{
-		printf("Could not open the file %s\n", *argv);
-		return -1;
-	}
-	if (!(src = src_head = malloc(poolsize)))
-	{
+    if (!(fd = open(*argv, 0x0000)))
+    {
+        printf("Could not open the file %s\n", *argv);
+        return -1;
+    }
+    if (!(src = src_head = malloc(poolsize)))
+    {
         printf("Could not malloc(%ld) for the source code", poolsize);
-		return -1;
-	}
+        return -1;
+    }
     if (!(text = text_head = malloc(poolsize)))
     {
         printf("Could not malloc(%ld) for the text segment", poolsize);
@@ -193,18 +193,18 @@ int main(int argc, char** argv)
         printf("Could not malloc(%ld) for the data segment", poolsize);
         return -1;
     }
-	if (!(i = read(fd, src, poolsize - 1)))
-	{
-		printf("Bad file read, returned %d", i);
-		return -1;
-	}
+    if (!(i = read(fd, src, poolsize - 1)))
+    {
+        printf("Bad file read, returned %d", i);
+        return -1;
+    }
     src[i] = 0;
 
     memset(text, 0, poolsize);
     memset(stack, 0, poolsize);
     memset(data, 0, poolsize);
 
-	program(src, text, data);
+    program(src, text, data);
 
     *text++ = IMM;
     *text++ = 3;
@@ -228,5 +228,5 @@ int main(int argc, char** argv)
     *text++ = EXIT;
     *text++ = 0;
 
-	return eval(text_head, stack, data);
+    return eval(text_head, stack, data);
 }
