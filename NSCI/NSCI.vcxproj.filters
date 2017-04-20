@@ -18,5 +18,8 @@
     <ClCompile Include="nsci.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="old_nsci.c">
+      <Filter>资源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <memory.h>
-#include <fcntl.h>
 
-int poolsize;
+#define POOL_SIZE (1024 * 256)
 
 enum Nadeko_C_Virtual_Machine_Commands
 {
@@ -20,12 +19,47 @@ enum Nadeko_C_Virtual_Machine_Commands
     PRTF, EXIT
 };
 
+enum Token_Classes
+{
+    Int = 128, Long, LongLong, Char, String, Glo, Loc, Fun, Sys, Id,
+    If, Else, While, Break, Continue, Return, Enum, Struct,
+    Assign, Cond, Lor, Land, Or, Xor, And, Ne, Eq, Le, Lt, Ge, Gt,
+    Shr, Shl, Sub, Add, Mod, Mul, Div, Sizeof, Not, Lnot, Dec, Inc,
+    Ptr, Sel, Brak
+};
+
+struct _Token
+{
+    int token;
+    int hash;
+    char *name;
+    int type;
+    int class;
+#ifndef WIN32
+    long value;
+#else
+    long long value;
+#endif
+}
+Token, *Tptr;
+
+int is_white_space(char *token)
+{
+    return *token == ' ' || *token == '\t'
+        || *token == '\r' || *token == '\n';
+}
+
+void global_declaration(char **src, long **text, char **data)
+{
+    while (is_white_space(*src)) { ++src; }
+}
+
 void program(char *src, long *text, char *data)
 {
     int token;
     while (token = *src++)
     {
-        putchar(token);
+        global_declaration(&src, &text, &data);
     }
 }
 
@@ -35,7 +69,7 @@ int eval(long *pc, long *stack, char *data)
     long eax;
     long *ebp, *esp;
 
-    ebp = esp = stack + poolsize / sizeof(long) - 1;
+    ebp = esp = stack + POOL_SIZE / sizeof(long) - 1;
 
     while (1)
     {
@@ -166,43 +200,41 @@ int main(int argc, char** argv)
     --argc;
     ++argv;
 
-    poolsize = 1024 * 256;
-
     if (!(fd = open(*argv, 0x0000)))
     {
         printf("Could not open the file %s\n", *argv);
         return -1;
     }
-    if (!(src = src_head = malloc(poolsize)))
+    if (!(src = src_head = malloc(POOL_SIZE)))
     {
-        printf("Could not malloc(%ld) for the source code", poolsize);
+        printf("Could not malloc(%ld) for the source code", POOL_SIZE);
         return -1;
     }
-    if (!(text = text_head = malloc(poolsize)))
+    if (!(text = text_head = malloc(POOL_SIZE)))
     {
-        printf("Could not malloc(%ld) for the text segment", poolsize);
+        printf("Could not malloc(%ld) for the text segment", POOL_SIZE);
         return -1;
     }
-    if (!(stack = malloc(poolsize)))
+    if (!(stack = malloc(POOL_SIZE)))
     {
-        printf("Could not malloc(%ld) for the stack segment", poolsize);
+        printf("Could not malloc(%ld) for the stack segment", POOL_SIZE);
         return -1;
     }
-    if (!(data = data_head = malloc(poolsize)))
+    if (!(data = data_head = malloc(POOL_SIZE)))
     {
-        printf("Could not malloc(%ld) for the data segment", poolsize);
+        printf("Could not malloc(%ld) for the data segment", POOL_SIZE);
         return -1;
     }
-    if (!(i = read(fd, src, poolsize - 1)))
+    if (!(i = read(fd, src, POOL_SIZE - 1)))
     {
         printf("Bad file read, returned %d", i);
         return -1;
     }
     src[i] = 0;
 
-    memset(text, 0, poolsize);
-    memset(stack, 0, poolsize);
-    memset(data, 0, poolsize);
+    memset(text, 0, POOL_SIZE);
+    memset(stack, 0, POOL_SIZE);
+    memset(data, 0, POOL_SIZE);
 
     program(src, text, data);
 
@@ -224,7 +256,7 @@ int main(int argc, char** argv)
     *text++ = (long)(text + 3);
 #endif
     *text++ = EXIT;
-    *text++ = -666;
+    *text++ = 666;
     *text++ = EXIT;
     *text++ = 0;
 
